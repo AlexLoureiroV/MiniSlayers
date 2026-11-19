@@ -42,21 +42,7 @@ Health / Points ──(onDamaged, onHealed, onGetPoints, onLevelUp, onDeath)─�
 - **UIController**: `updateLive`, `updatePoints` (ToString, alineado derecha), `UpdateLevel` (`_levelText`) y fin de partida con frase aleatoria.
 - **SoundController**: `damageSound`/`dieSound` + `playDamage()`/`playDie()` y extras.
 
-**Extras:** intro con tarjeta de título + cuenta atrás 3-2-1-¡YA! con pausa real,
-guía de controles en pantalla (H), flash de daño en sprites y fondo con shader
-de "calorímo", TextMeshPro con fuentes pixel personalizadas.
 
-## 📁 Estructura
-
-```
-Assets/
-├── Scripts/    (9 scripts, esquema de regiones, namespace MiniSlayers)
-├── Scenes/
-├── Sprites/    (EVA-01 y Ángel pixel art, fondo, intro)
-├── Audio/      (sonidos CC0)
-├── Fonts/      (fuentes TMP)
-└── Shaders/    (HeatHaze.shader - distorsión del fondo)
-Docs/           (UML del sistema en draw.io + PNG)
 ```
 
 ## 🚀 Cómo jugar
@@ -65,5 +51,3 @@ Docs/           (UML del sistema en draw.io + PNG)
 2. Abre la escena `Assets/Scenes/ArenaSupervivencia.unity`.
 3. Pulsa **Play** y usa los controles de arriba.
 
----
-Práctica académica — curso de C# avanzado con Unity.
