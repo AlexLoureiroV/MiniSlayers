@@ -29,6 +29,12 @@ namespace MiniSlayers
 
         /// <summary>Tecla L: el heroe sube de nivel.</summary>
         public event Action OnKeyAddLevel;
+
+        /// <summary>Tecla J: el heroe dispara su laser (v2, cooldown en EvaLaser).</summary>
+        public event Action OnKeyLaser;
+
+        /// <summary>Barra espaciadora: activa el campo AT (v2).</summary>
+        public event Action OnKeyAT;
         #endregion
 
         #region Unity Callbacks
@@ -62,6 +68,18 @@ namespace MiniSlayers
             {
                 Debug.Log("[InputSystem] Tecla L pulsada -> OnKeyAddLevel");
                 OnKeyAddLevel?.Invoke();
+            }
+
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                Debug.Log("[InputSystem] Tecla J pulsada -> OnKeyLaser");
+                OnKeyLaser?.Invoke();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Debug.Log("[InputSystem] Espaciadora pulsada -> OnKeyAT");
+                OnKeyAT?.Invoke();
             }
         }
         #endregion

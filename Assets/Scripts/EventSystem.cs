@@ -28,6 +28,7 @@ namespace MiniSlayers
         [SerializeField] private Health _health;
         [SerializeField] private Points _points;
         [SerializeField] private Health _enemyHealth;
+        [SerializeField] private PotionInventory _potions;
 
         [Header("Modulos de presentacion")]
         [SerializeField] private UIController _ui;
@@ -54,6 +55,13 @@ namespace MiniSlayers
         [Header("Reinicio")]
         [SerializeField] private KeyCode _restartKey = KeyCode.R;
 
+        [Header("Combate real (v2)")]
+        [SerializeField] private EvaLaser _laser;
+        [SerializeField] private ATField _atField;
+        [SerializeField] private AngelAI _angelAI;
+        [SerializeField] private int _laserDamage = 20;
+        [SerializeField] private int _angelFireDamage = 20;
+
         private bool _gameOver;
         #endregion
 
@@ -68,6 +76,14 @@ namespace MiniSlayers
                 _inputs.OnKeyHeal += HandleHeal;
                 _inputs.OnKeyPoints += HandlePoints;
                 _inputs.OnKeyAddLevel += HandleAddLevel;
+                _inputs.OnKeyLaser += HandleLaser;
+                _inputs.OnKeyAT += HandleAT;
+            }
+
+            if (_angelAI != null)
+            {
+                _angelAI.onFire += HandleAngelFire;
+                _angelAI.onChargeStart += HandleChargeStart;
             }
 
             // Listeners de los eventos internos de la logica.
@@ -107,6 +123,8 @@ namespace MiniSlayers
                 _inputs.OnKeyHeal -= HandleHeal;
                 _inputs.OnKeyPoints -= HandlePoints;
                 _inputs.OnKeyAddLevel -= HandleAddLevel;
+                _inputs.OnKeyLaser -= HandleLaser;
+                _inputs.OnKeyAT -= HandleAT;
             }
 
             if (_health != null)
@@ -122,6 +140,12 @@ namespace MiniSlayers
             if (_enemyHealth != null)
             {
                 _enemyHealth.onDeath -= HandleEnemyDeath;
+            }
+
+            if (_angelAI != null)
+            {
+                _angelAI.onFire -= HandleAngelFire;
+                _angelAI.onChargeStart -= HandleChargeStart;
             }
         }
         #endregion
@@ -149,10 +173,18 @@ namespace MiniSlayers
                 return;
             }
 
-            if (_health != null && !_health.IsDead)
+            if (_health != null && _health.IsDead)
             {
-                _health.Heal(_healAmount);
+                return;
             }
+
+            if (_potions != null && !_potions.TryUse())
+            {
+                Debug.Log("[EventSystem] Sin pociones: la curacion esta agotada");
+                return;
+            }
+
+            _health?.Heal(_healAmount);
         }
 
         /// <summary>OnKeyPoints -> Puntos (tecla K).</summary>
@@ -164,6 +196,14 @@ namespace MiniSlayers
             }
 
             _points?.AddPoints(_pointsPerKill);
+
+            if (_angelAI != null && !_angelAI.IsCharging)
+            {
+                Debug.Log("[EventSystem] El Angel es invulnerable mientras no carga");
+                _angelAI.BlinkInvulnerable();
+                return;
+            }
+
             _enemyHealth?.Damage(_damagePerKill);
         }
 
@@ -178,6 +218,82 @@ namespace MiniSlayers
             _points?.AddLevel();
         }
 
+        /// <summary>OnKeyLaser -> el heroe dispara (v2). Solo dana mientras el Angel carga.</summary>
+        private void HandleLaser()
+        {
+            if (_gameOver || InputBlocked)
+            {
+                return;
+            }
+
+            if (_laser == null || !_laser.TryFire())
+            {
+                return;
+            }
+
+            if (_sound != null)
+            {
+                _sound.playLaser();
+            }
+
+            if (_angelAI != null && _angelAI.IsCharging)
+            {
+                Debug.Log("[EventSystem] Impacto directo en el Angel mientras carga");
+                _enemyHealth?.Damage(_laserDamage);
+            }
+            else if (_angelAI != null)
+            {
+                Debug.Log("[EventSystem] El Angel es invulnerable fuera de la carga");
+                _angelAI.BlinkInvulnerable();
+            }
+            else
+            {
+                _enemyHealth?.Damage(_laserDamage);
+            }
+        }
+
+        /// <summary>OnKeyAT -> activa el campo AT (v2).</summary>
+        private void HandleAT()
+        {
+            if (_gameOver || InputBlocked)
+            {
+                return;
+            }
+
+            _atField?.TryActivate();
+        }
+
+        /// <summary>El Angel dispara (v2): el campo AT puede bloquear el impacto.</summary>
+        private void HandleAngelFire()
+        {
+            if (_gameOver)
+            {
+                return;
+            }
+
+            if (_atField != null && _atField.TryBlock())
+            {
+                if (_sound != null)
+                {
+                    _sound.playBlock();
+                }
+
+                return;
+            }
+
+            Debug.Log("[EventSystem] Impacto del Angel sobre el heroe");
+            _health?.Damage(_angelFireDamage);
+        }
+
+        /// <summary>El Angel empieza a cargar (v2): momento vulnerable + sonido.</summary>
+        private void HandleChargeStart()
+        {
+            if (_sound != null)
+            {
+                _sound.playCharge();
+            }
+        }
+
         /// <summary>La vida llega a 0: sonido de muerte, pantalla de derrota y Destroy del heroe.</summary>
         private void HandleDeath()
         {
@@ -187,6 +303,12 @@ namespace MiniSlayers
             }
 
             _gameOver = true;
+
+            if (_angelAI != null)
+            {
+                _angelAI.StopCombat();
+            }
+
             Debug.Log("[EventSystem] Derrota: el heroe ha caido");
 
             if (_sound != null)

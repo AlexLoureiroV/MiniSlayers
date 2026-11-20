@@ -26,6 +26,11 @@ namespace MiniSlayers
         [SerializeField] private AudioClip _pointSound;
         [SerializeField] private AudioClip _levelUpSound;
 
+        [Header("Sonidos de combate real (v2)")]
+        [SerializeField] private AudioClip _laserSound;
+        [SerializeField] private AudioClip _chargeSound;
+        [SerializeField] private AudioClip _blockSound;
+
         [Header("Escuchadores de eventos")]
         [SerializeField] private Health _health;
         [SerializeField] private Points _points;
@@ -110,6 +115,24 @@ namespace MiniSlayers
         public void playLevelUp(int newLevel)
         {
             PlayOneShotSafe(_levelUpSound, "playLevelUp (nivel " + newLevel + ")");
+        }
+
+        /// <summary>Sonido del laser del heroe (v2).</summary>
+        public void playLaser()
+        {
+            PlayOneShotSafe(_laserSound, "playLaser");
+        }
+
+        /// <summary>Sonido de carga del Angel (v2).</summary>
+        public void playCharge()
+        {
+            PlayOneShotSafe(_chargeSound, "playCharge");
+        }
+
+        /// <summary>Sonido del campo AT bloqueando (v2).</summary>
+        public void playBlock()
+        {
+            PlayOneShotSafe(_blockSound, "playBlock");
         }
         #endregion
 
